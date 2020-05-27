@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Visual QA Demo</title>
+
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <style type="text/css">
+        * {
+                box-sizing: border-box
+                margin: 0
+                padding: 0
+         }
+         body {
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                color: #003262;
+         }
+        .container {
+                margin: 0 auto;
+                max-width: 960px;
+                padding: 0 10px;
+         }
+         header {
+                background-color: #003262;
+                padding: 20px, 0;
+                margin-bottom: 20px;
+         }
+         header h1 {
+                color: #FDB515;
+                margin-bottom: 5px;
+         }
+         header p {
+                color: white;
+         }
+         a {
+                color: #00B0DA;
+         }
+         input[type="text"]{
+                border: 2px solid #DDD5C7;
+                font-size: 1.5rem;
+                padding: 10px;
+                outline: none;
+                border-radius: 3px;
+                width: 100%;
+                margin-bottom: 20px;
+         }
+         input[type="text"]:focus{
+                border-color: #00B0DA;
+         }
+         #answer {
+                color: #888;
+                font-size: 1.25rem;
+         }
+         #answer p {
+                color: #888;
+                font-size:1.25rem;
+         }
+         #answer p:first-of-type{
+                color: #003262;
+                font-weight: bold;
+                font-size: 1.5rem;
+         }
+		#viz {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		#viz img {
+			height: 200px;
+			border: 1px solid #003262;
+		#status {
+			text-align: center;
+			margin-bottom: 20px;
+			font-size: 0.9rem;
+			color: #888;
+		}
+		hr {
+			height: 0;
+			border: 0;
+			border-bottom: 1px solid #DDD5C7;
+			margin-bottom: 20px;
+		}
+		p {
+			font-size: 0.9rem;
+		}
+		footer {
+			margin-bottom: 20px;
+		}
+
+    </style>
+
+</head>
+<body>
+    <header>
+            <div class = "container">
+                    <h1>Visual QA Demo</h1>
+                    <p>Interact with our state-of-the-art system for visual question answering.</p>
+            </div>
+    </header>
+
+    <div class="container">
+
+    <script type="text/javascript">
+        var images = []
+        images[0] = "CLEVR_val_000000.png";
+        images[1] = "CLEVR_val_000051.png";
+
+        var randomBgIndex = Math.round( Math.random());
+        document.write('<img src="' + images[randomBgIndex] + '">');
+    </script>
+
+    </div>
+
+    <div class="container">
+        <input type="text" placeholder = "Type a question and hit enter..." id="question"/>
+        <div id="answer">
+
+        </div>
+        <input type="text" placeholder = "请在这里输入你的问题" id="question_zh"/>
+        <div id="answer_zh">
+
+        </div>
+		<div id="viz">
+
+		</div>
+		<div id="status">
+
+		</div>
+    </div>
+
+    <script type="text/javascript">
+		function clearResponse() {
+			$('#answer').html('');
+			$('#viz').html('');
+			$('#status').html('');
+		}
+
+		current_image_id = randomBgIndex;
+
+        function predict(question) {
+            $.post('/predict',{
+                    'img_id': current_image_id,
+                    'question': question
+            }, function(response){
+                if(response.error){
+                    clearResponse();
+                    alert(response.error);
+                } else {
+                        displayAnswers(response.answer, response.time);
+                }
+            })
+        }
+
+		function displayAnswers(answer, time) {
+			strings = []
+
+				strings.push('<p>' + answer + '</p>')
+
+			$('#answer').html(strings.join(' '));
+			$('#status').text('Took ' + time.toFixed(3) + ' sec');
+		}
+		$('#question').keypress(function(e) {
+			if (e.which == 13) {
+				$('#question').blur();
+				clearResponse();
+				$('#status').text('Computing...');
+				predict($('#question').val());
+			}
+		});
+    </script>
+
+</body>
+</html>
