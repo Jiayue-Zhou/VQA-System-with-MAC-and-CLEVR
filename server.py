@@ -10,6 +10,7 @@ import torch.nn as nn
 import os, json
 import time
 from clevr_data_provider_layer import proc_ques, extract_feat, tokenize, ans_stat
+from util.translation import process_translate
 from model.net import Net
 
 VDICT_PATH = ""
@@ -83,6 +84,8 @@ def predict():
     global token_to_ix
     #result = {"success": False}
     img_hash = request.form['img_id']
+    flag = int(request.form['flag'])
+    print("Mode:(1 for Zh, and 0 for En):", flag)
     #if img_hash not in feature_cache:
     #    return jsonify({'error': 'Unknown image ID. Try uploading the image again.'})
     time_start = time.time()
@@ -91,7 +94,13 @@ def predict():
     img_feature = feature_path[img_hash]
     img_feature = np.load(img_feature)['x']
     img_feature = torch.from_numpy(img_feature)
+
     question = request.form['question']
+    if flag == 1:
+        tgt_text, trans_type = process_translate(question)
+        print("tgt_text:", tgt_text)
+        print("trans_type", trans_type)
+        question = tgt_text
     print("Get question:", question)
 
     ques_ix = proc_ques(question, token_to_ix, max_token)
@@ -108,8 +117,12 @@ def predict():
     print("pred_np:", pred_np)
     pred_argmax = np.argmax(pred_np, axis=1)[0]
     print("pred_argmax:", pred_argmax)
+
     pred_ans = ix_to_ans[pred_argmax]
     print("predict done. pred_ans:", pred_ans)
+    if flag == 1:
+        pred_ans, _ = process_translate(pred_ans)
+    #print("predict done. pred_ans:", pred_ans)
     timegap = time_end - time_start
 
 
